@@ -28,9 +28,9 @@ if models.model_openai:
     try:
         print("Testing OpenAI connection...")
         llm = models.model_openai
-        print("✅ Using OpenAI chat model")
+        print("[SUCCESS] Using OpenAI chat model")
     except Exception as e:
-        print(f"❌ OpenAI connection failed: {e}")
+        print(f"[ERROR] OpenAI connection failed: {e}")
 
 # If OpenAI failed or not available, try Ollama
 if not llm and models.model_ollama:
@@ -39,14 +39,14 @@ if not llm and models.model_ollama:
         from langchain_core.messages import HumanMessage
         test_response = models.model_ollama.invoke([HumanMessage(content="test")])
         llm = models.model_ollama
-        print("✅ Using Ollama chat model")
+        print("[SUCCESS] Using Ollama chat model")
     except Exception as e:
-        print(f"❌ Ollama connection failed: {e}")
+        print(f"[ERROR] Ollama connection failed: {e}")
         print("💡 Tip: Make sure Ollama is installed and running. Visit: https://ollama.com/download")
 
 # Exit if no language model is available
 if not llm:
-    print("❌ No language model available. Please configure either:")
+    print("[ERROR] No language model available. Please configure either:")
     print("   1. OpenAI API (set OPENAI_API_KEY in .env file)")
     print("   2. Ollama (install and run: ollama serve)")
     exit(1)
@@ -75,7 +75,7 @@ retriever = vector_store.as_retriever(search_kwargs={"k":10})
 combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=prompt)
 retrieval_chain = create_retrieval_chain(retriever=retriever, combine_docs_chain=combine_docs_chain)
 
-print("✅ Chat system ready!")
+print("[SUCCESS] Chat system ready!")
 
 # Main Loop
 
@@ -113,7 +113,7 @@ def main():
             print("Assistant:", response["answer"])
             print()
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"[ERROR] Error: {e}")
             print("Please try rephrasing your question.")
             print()
 

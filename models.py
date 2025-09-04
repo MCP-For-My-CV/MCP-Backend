@@ -23,13 +23,13 @@ class Models:
                     model="gpt-3.5-turbo",
                     temperature=0.1
                 )
-                print("✅ OpenAI models initialized successfully")
+                print("[SUCCESS] OpenAI models initialized successfully")
             except Exception as e:
-                print(f"❌ OpenAI initialization failed: {e}")
+                print(f"[ERROR] OpenAI initialization failed: {e}")
                 self.embeddings_openai = None
                 self.model_openai = None
         else:
-            print("ℹ️ No OPENAI_API_KEY found")
+            print("[INFO] No OPENAI_API_KEY found")
             self.embeddings_openai = None
             self.model_openai = None
 
@@ -42,11 +42,11 @@ class Models:
                 self.embeddings_ollama = OllamaEmbeddings(
                     model="mxbai-embed-large"
                 )
-                print("✅ Ollama embeddings initialized successfully")
+                print("[SUCCESS] Ollama embeddings initialized successfully")
             else:
                 raise Exception("Ollama server not responding")
         except Exception as e:
-            print(f"ℹ️ Ollama embeddings not available: {e}")
+            print(f"[INFO] Ollama embeddings not available: {e}")
             self.embeddings_ollama = None
 
         self.embeddings_hf = HuggingFaceEmbeddings(
@@ -62,9 +62,9 @@ class Models:
                 self.model_ollama = ChatOllama(
                     model="llama3.2"
                 )
-                print("✅ Ollama chat model initialized successfully")
+                print("[SUCCESS] Ollama chat model initialized successfully")
             else:
                 raise Exception("Ollama server not responding")
         except Exception as e:
-            print(f"ℹ️ Ollama chat model not available: {e}")
+            print(f"[INFO] Ollama chat model not available: {e}")
             self.model_ollama = None

@@ -3,6 +3,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
 
 WORKDIR /app
 
@@ -22,8 +23,8 @@ COPY . .
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 USER appuser
 
-# Expose port for Render
-EXPOSE 10000
+# Expose port for REST API
+EXPOSE 8000
 
-# Run the MCP server
-CMD ["python", "mcp_server.py"]
+# Run the REST API server
+CMD ["python", "rest_api.py"]

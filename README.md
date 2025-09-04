@@ -1,14 +1,15 @@
-# MCP Server - Document Ingestion System
+# MCP Server - CV RAG System
 
-A Python-based document ingestion system that processes PDF files and stores them in a vector database for semantic search capabilities.
+A Python-based Retrieval Augmented Generation (RAG) system that processes PDF files and allows question answering using a REST API.
 
 ## Features
 
 - **PDF Processing**: Automatically processes PDF files from a designated folder
-- **Vector Storage**: Uses ChromaDB with HuggingFace embeddings for document storage
-- **Multiple Model Support**: Supports Ollama and Grok language models
-- **Automatic File Processing**: Monitors a folder and processes new files automatically
-- **Semantic Search**: Query documents using natural language
+- **Vector Storage**: Uses ChromaDB with OpenAI/HuggingFace embeddings
+- **Multiple Model Support**: Supports OpenAI and Ollama language models
+- **REST API**: Provides HTTP endpoints for interacting with the system
+- **MCP Server**: Implements the Model Context Protocol for tool integration
+- **Docker Support**: Easy deployment with Docker
 
 ## Setup
 
@@ -20,16 +21,11 @@ pip install -r requirements.txt
 
 ### 2. Environment Configuration
 
-Copy `.env.template` to `.env` and configure your API keys:
-
-```bash
-cp .env.template .env
-```
-
-Edit `.env` and add your API keys:
+Create a `.env` file and configure your API keys:
 
 ```
-XAI_API_KEY=your_grok_api_key_here  # Optional, only needed for Grok model
+OPENAI_API_KEY=your_openai_api_key_here
+EMAIL_PASSWORD=your_email_password_here  # Optional, for email functionality
 ```
 
 ### 3. Folder Structure
@@ -37,28 +33,38 @@ XAI_API_KEY=your_grok_api_key_here  # Optional, only needed for Grok model
 The system expects the following folder structure:
 
 ```
-MCP Server/
+MCP-Backend/
 ├── Data/          # Place PDF files here for processing
 ├── DB/            # Vector database storage (auto-created)
 ├── ingest.py      # Main ingestion script
 ├── models.py      # Model configurations
-└── test_ingest.py # Test script
+├── chat.py        # Chat interface for querying
+├── mcp_server.py  # MCP server implementation
+├── rest_api.py    # REST API server
+└── rag_core.py    # RAG core functionality
 ```
 
 ## Usage
 
-### Manual File Processing
+### Running the REST API Server
 
-To process a single PDF file:
-
-```python
-from ingest import ingest_file
-ingest_file('./Data/your_document.pdf')
+```bash
+python rest_api.py
 ```
 
-### Automatic Folder Monitoring
+This will:
 
-To continuously monitor the `Data` folder for new PDF files:
+1. Start the FastAPI server on port 8000
+2. Initialize the RAG system with models and vector store
+3. Provide endpoints for RAG and email functionality
+
+### Running the MCP Server
+
+```bash
+python mcp_server.py
+```
+
+### Ingesting Documents
 
 ```bash
 python ingest.py
@@ -66,54 +72,119 @@ python ingest.py
 
 This will:
 
-1. Monitor the `./Data` folder every 10 seconds
-2. Process any PDF files that don't start with `_`
-3. Add a `_` prefix to processed files to avoid reprocessing
-4. Store document chunks in the ChromaDB vector database
-
-### Testing the System
-
-Run the test script to verify everything works:
-
-```bash
-python test_ingest.py
-```
+1. Process any PDF files in the `./Data` folder
+2. Add a `_` prefix to processed files to avoid reprocessing
+3. Store document chunks in the ChromaDB vector database
 
 ### Querying Documents
 
-```python
-from ingest import vector_store
+You can use the interactive chat interface:
 
-# Search for similar content
-results = vector_store.similarity_search("your query here", k=3)
+```bash
+python chat.py
+```
 
-for doc in results:
-    print(doc.page_content)
+Or query directly through the REST API:
+
+```bash
+curl -X POST "http://localhost:8000/tools/rag" \
+     -H "Content-Type: application/json" \
+     -d '{"question": "What skills do I have?"}'
+```
+
+## Docker Deployment
+
+### Building and Running with Docker
+
+1. Build the Docker image:
+
+```bash
+docker build -t mcp-cv-rag .
+```
+
+2. Run the container:
+
+```bash
+docker run -p 8000:8000 -e OPENAI_API_KEY=your_openai_api_key mcp-cv-rag
+```
+
+Or use the provided scripts:
+
+```bash
+# Linux/Mac
+./docker-run.sh
+
+# Windows
+./docker-run.ps1
+```
+
+### Deploying to Render
+
+1. Push your repository to GitHub
+2. Create a new Web Service on Render
+3. Connect your GitHub repository
+4. Set the following:
+   - Environment: Docker
+   - Environment Variables: Add your `OPENAI_API_KEY`
+
+## API Endpoints
+
+### RAG Endpoint
+
+```
+POST /tools/rag
+```
+
+Request body:
+
+```json
+{
+  "question": "What skills do I have?"
+}
+```
+
+Response:
+
+```json
+{
+  "question": "What skills do I have?",
+  "answer": "Your skills include Python, JavaScript, Angular, .NET, SQL, and data analysis.",
+  "timestamp": "2025-09-04 13:37:14",
+  "status": "success"
+}
+```
+
+### Email Endpoint
+
+```
+POST /tools/email
+```
+
+Request body:
+
+```json
+{
+  "recipient": "example@example.com",
+  "subject": "Test Email",
+  "body": "This is a test email"
+}
 ```
 
 ## Configuration
+
+### Model Settings
+
+In `models.py`, you can configure which models to use for:
+
+- Embeddings (OpenAI, Ollama, HuggingFace)
+- Language models (OpenAI, Ollama)
 
 ### Document Processing Settings
 
 In `ingest.py`, you can modify:
 
 - `chunks_size`: Size of text chunks (default: 1000)
-- `chunk_overlap`: Overlap between chunks (default: 50)
-- `check_interval`: Folder monitoring interval in seconds (default: 10)
-
-### Model Selection
-
-The system supports multiple embedding and language models:
-
-#### Embeddings:
-
-- **HuggingFace** (default): `sentence-transformers/all-MiniLM-L6-v2`
-- **Ollama**: `mxbai-embed-large` (requires Ollama running locally)
-
-#### Language Models:
-
-- **Ollama**: `llama3.2` (requires Ollama running locally)
-- **Grok**: `grok-4-latest` (requires XAI_API_KEY)
+- `chunks_overlap`: Overlap between chunks (default: 200)
 
 ## Dependencies
 
@@ -121,10 +192,14 @@ Key packages:
 
 - `langchain-chroma`: Vector database
 - `langchain-community`: Document loaders
+- `langchain-openai`: OpenAI integration
 - `langchain-huggingface`: HuggingFace embeddings
 - `langchain-ollama`: Ollama integration
 - `pypdf`: PDF processing
-- `sentence-transformers`: Embedding models
+- `fastapi`: REST API framework
+- `uvicorn`: ASGI server
+- `mcp`: Model Context Protocol
+- `sentence-transformers`: Embedding models (fallback)
 
 ## Troubleshooting
 
@@ -136,7 +211,7 @@ If you see "Failed to connect to Ollama" errors:
 2. Start Ollama service
 3. Pull required models: `ollama pull llama3.2` and `ollama pull mxbai-embed-large`
 
-The system will automatically fall back to HuggingFace embeddings if Ollama is not available.
+The system will automatically use OpenAI models if Ollama is not available.
 
 ### Memory Issues
 
