@@ -60,6 +60,10 @@ def send_email(recipient: str, subject: str, body: str) -> str:
 # -------- Run MCP Server -------- #
 if __name__ == "__main__":
     import logging
+    from dotenv import load_dotenv
+    
+    # Load environment variables
+    load_dotenv()
     
     # Set up logging for deployment
     logging.basicConfig(
