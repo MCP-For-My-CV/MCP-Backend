@@ -1,0 +1,16 @@
+services:
+  # A Docker web service
+  - type: web
+    name: mcp-cv-rag
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_EMBEDDINGS_ONLY
+        value: true
+      - key: PORT
+        value: 10000
+    # autoDeploy: true is the default
+    autoDeploy: true

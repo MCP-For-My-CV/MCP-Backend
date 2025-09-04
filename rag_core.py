@@ -34,9 +34,15 @@ def initialize_rag():
     elif models.embeddings_ollama:
         embeddings = models.embeddings_ollama
         print("[INFO] Using Ollama embeddings for chat")
-    else:
+    elif models.embeddings_hf:
         embeddings = models.embeddings_hf
         print("[INFO] Using HuggingFace embeddings for chat")
+    else:
+        print("[ERROR] No embedding models available. Please configure either:")
+        print("   1. OpenAI API (set OPENAI_API_KEY in .env file)")
+        print("   2. Ollama (install and run: ollama serve)")
+        print("   3. Or disable OPENAI_EMBEDDINGS_ONLY to use HuggingFace")
+        return False
     
     # Try to connect to available language models
     print("[DEBUG] Initializing language model...")
