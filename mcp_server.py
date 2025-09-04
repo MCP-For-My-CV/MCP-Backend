@@ -71,10 +71,20 @@ if __name__ == "__main__":
     print(f"📍 Environment: {'Production' if os.getenv('RENDER') else 'Development'}")
     print(f"🔑 OpenAI API Key: {'✅ Configured' if os.getenv('OPENAI_API_KEY') else '❌ Missing'}")
     
+    # Get port from environment (Render sets PORT automatically)
+    port = int(os.getenv('PORT', 8000))
+    host = '0.0.0.0'  # Listen on all interfaces for Render
+    
+    print(f"🌐 Starting MCP Server on http://{host}:{port}")
+    print(f"📡 MCP clients can connect to this server via HTTP transport")
+    
     try:
-        mcp.run()
+        # Run MCP server with HTTP transport on specified port
+        mcp.run(transport="streamable-http", host=host, port=port)
     except KeyboardInterrupt:
         print("🛑 Server stopped by user")
     except Exception as e:
         print(f"❌ Server error: {e}")
-        raise
+        # Don't raise in production to prevent container restart
+        if not os.getenv('RENDER'):
+            raise
