@@ -80,6 +80,20 @@ print("✅ Chat system ready!")
 # Main Loop
 
 def main():
+    import sys
+    
+    # Check if question is provided as command line argument
+    if len(sys.argv) > 1:
+        # Non-interactive mode for MCP server
+        query = " ".join(sys.argv[1:])
+        try:
+            response = retrieval_chain.invoke({"input": query})
+            print(response["answer"])
+        except Exception as e:
+            print(f"Error: {e}")
+        return
+    
+    # Interactive mode
     print("\n=== MCP Server Chat Interface ===")
     print("Ask questions about the ingested documents. Type 'q', 'quit' or 'exit' to end.")
     print()
