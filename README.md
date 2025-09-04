@@ -92,6 +92,18 @@ curl -X POST "http://localhost:8000/tools/rag" \
      -d '{"question": "What skills do I have?"}'
 ```
 
+### CORS Configuration
+
+The REST API has CORS enabled to allow frontend applications to access it. You can configure CORS using environment variables:
+
+```bash
+# Allow all origins (default)
+export CORS_ORIGINS="*"
+
+# Allow specific origins
+export CORS_ORIGINS="https://example.com,https://app.example.com"
+```
+
 ## Docker Deployment
 
 ### Building and Running with Docker

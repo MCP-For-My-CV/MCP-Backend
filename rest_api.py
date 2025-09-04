@@ -5,6 +5,7 @@ This creates REST endpoints that call the MCP tools
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import os
@@ -16,6 +17,29 @@ app = FastAPI(
     description="REST API wrapper for MCP Server tools",
     version="1.0.0"
 )
+
+# Configure CORS
+origins = os.getenv("CORS_ORIGINS", "*").split(",")
+if len(origins) == 1 and origins[0] == "*":
+    # Allow all origins mode
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
+    print(f"[CORS] Allowing requests from all origins")
+else:
+    # Restricted origins mode
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
+    print(f"[CORS] Allowing requests from: {', '.join(origins)}")
 
 # Request models
 class RAGRequest(BaseModel):
