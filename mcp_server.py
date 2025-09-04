@@ -71,20 +71,30 @@ if __name__ == "__main__":
     print(f"📍 Environment: {'Production' if os.getenv('RENDER') else 'Development'}")
     print(f"🔑 OpenAI API Key: {'✅ Configured' if os.getenv('OPENAI_API_KEY') else '❌ Missing'}")
     
-    # Get port from environment (Render sets PORT automatically)
-    port = int(os.getenv('PORT', 8000))
-    host = '0.0.0.0'  # Listen on all interfaces for Render
-    
-    print(f"🌐 Starting MCP Server on http://{host}:{port}")
-    print(f"📡 MCP clients can connect to this server via HTTP transport")
-    
-    try:
-        # Run MCP server with HTTP transport on specified port
-        mcp.run(transport="streamable-http", host=host, port=port)
-    except KeyboardInterrupt:
-        print("🛑 Server stopped by user")
-    except Exception as e:
-        print(f"❌ Server error: {e}")
-        # Don't raise in production to prevent container restart
-        if not os.getenv('RENDER'):
+    # Check if we're on Render (has PORT env var) or local development
+    if os.getenv('RENDER') or os.getenv('PORT'):
+        # Production/Render - use HTTP transport
+        port = int(os.getenv('PORT', 10000))
+        print(f"🌐 Starting MCP Server with HTTP transport on port {port}")
+        print(f"📡 MCP clients can connect via HTTP")
+        
+        try:
+            # Run with HTTP transport for Render
+            mcp.run(transport="streamable-http")
+        except KeyboardInterrupt:
+            print("🛑 Server stopped by user")
+        except Exception as e:
+            print(f"❌ Server error: {e}")
+    else:
+        # Local development - use stdio transport
+        print("🖥️  Starting MCP Server with stdio transport (local development)")
+        print("📡 MCP clients can connect via stdio")
+        
+        try:
+            # Run with stdio transport for local development
+            mcp.run()
+        except KeyboardInterrupt:
+            print("🛑 Server stopped by user")
+        except Exception as e:
+            print(f"❌ Server error: {e}")
             raise
