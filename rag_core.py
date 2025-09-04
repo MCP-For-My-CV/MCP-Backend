@@ -24,56 +24,13 @@ def initialize_rag():
     
     print("[DEBUG] Starting RAG initialization...")
     
-    # Initialize The Models
+    # Initialize The Models (OpenAI only)
     models = Models()
     
-    # Choose embeddings
-    if models.embeddings_openai:
-        embeddings = models.embeddings_openai
-        print("[INFO] Using OpenAI embeddings for chat")
-    elif models.embeddings_ollama:
-        embeddings = models.embeddings_ollama
-        print("[INFO] Using Ollama embeddings for chat")
-    elif models.embeddings_hf:
-        embeddings = models.embeddings_hf
-        print("[INFO] Using HuggingFace embeddings for chat")
-    else:
-        print("[ERROR] No embedding models available. Please configure either:")
-        print("   1. OpenAI API (set OPENAI_API_KEY in .env file)")
-        print("   2. Ollama (install and run: ollama serve)")
-        print("   3. Or disable OPENAI_EMBEDDINGS_ONLY to use HuggingFace")
-        return False
-    
-    # Try to connect to available language models
-    print("[DEBUG] Initializing language model...")
-    
-    # First try OpenAI if API key is available
-    if models.model_openai:
-        try:
-            print("[DEBUG] Testing OpenAI connection...")
-            llm = models.model_openai
-            print("[SUCCESS] Using OpenAI chat model")
-        except Exception as e:
-            print(f"[ERROR] OpenAI connection failed: {e}")
-    
-    # If OpenAI failed or not available, try Ollama
-    if not llm and models.model_ollama:
-        try:
-            print("[DEBUG] Testing Ollama connection...")
-            from langchain_core.messages import HumanMessage
-            test_response = models.model_ollama.invoke([HumanMessage(content="test")])
-            llm = models.model_ollama
-            print("[SUCCESS] Using Ollama chat model")
-        except Exception as e:
-            print(f"[ERROR] Ollama connection failed: {e}")
-            print("[INFO] Tip: Make sure Ollama is installed and running. Visit: https://ollama.com/download")
-    
-    # Exit if no language model is available
-    if not llm:
-        print("[ERROR] No language model available. Please configure either:")
-        print("   1. OpenAI API (set OPENAI_API_KEY in .env file)")
-        print("   2. Ollama (install and run: ollama serve)")
-        return False
+    # Use OpenAI embeddings (no fallbacks)
+    embeddings = models.embeddings_openai
+    llm = models.model_openai
+    print("[INFO] Using OpenAI embeddings and chat model")
     
     print("[DEBUG] Initializing vector store...")
     

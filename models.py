@@ -1,7 +1,5 @@
 import os
 from dotenv import load_dotenv
-from langchain_ollama import OllamaEmbeddings, ChatOllama
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 # Load environment variables
@@ -24,47 +22,17 @@ class Models:
                     temperature=0.1
                 )
                 print("[SUCCESS] OpenAI models initialized successfully")
+                
+                # Set these to None since we're only using OpenAI
+                self.embeddings_ollama = None
+                self.model_ollama = None
+                self.embeddings_hf = None
+                
             except Exception as e:
                 print(f"[ERROR] OpenAI initialization failed: {e}")
                 self.embeddings_openai = None
                 self.model_openai = None
+                raise Exception(f"OpenAI initialization failed: {e}")
         else:
-            print("[INFO] No OPENAI_API_KEY found")
-            self.embeddings_openai = None
-            self.model_openai = None
-
-        # Try Ollama embeddings as backup
-        try:
-            # Quick test to see if Ollama is available
-            import requests
-            response = requests.get("http://localhost:11434/api/tags", timeout=2)
-            if response.status_code == 200:
-                self.embeddings_ollama = OllamaEmbeddings(
-                    model="mxbai-embed-large"
-                )
-                print("[SUCCESS] Ollama embeddings initialized successfully")
-            else:
-                raise Exception("Ollama server not responding")
-        except Exception as e:
-            print(f"[INFO] Ollama embeddings not available: {e}")
-            self.embeddings_ollama = None
-
-        self.embeddings_hf = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
-
-        # Try Ollama chat model as backup
-        try:
-            # Quick test to see if Ollama is available
-            import requests
-            response = requests.get("http://localhost:11434/api/tags", timeout=2)
-            if response.status_code == 200:
-                self.model_ollama = ChatOllama(
-                    model="llama3.2"
-                )
-                print("[SUCCESS] Ollama chat model initialized successfully")
-            else:
-                raise Exception("Ollama server not responding")
-        except Exception as e:
-            print(f"[INFO] Ollama chat model not available: {e}")
-            self.model_ollama = None
+            print("[ERROR] No OPENAI_API_KEY found in environment variables")
+            raise Exception("No OPENAI_API_KEY found in environment variables")
