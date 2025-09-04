@@ -59,5 +59,22 @@ def send_email(recipient: str, subject: str, body: str) -> str:
 
 # -------- Run MCP Server -------- #
 if __name__ == "__main__":
+    import logging
+    
+    # Set up logging for deployment
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
     print("🚀 Starting MCP Server...")
-    mcp.run()
+    print(f"📍 Environment: {'Production' if os.getenv('RENDER') else 'Development'}")
+    print(f"🔑 OpenAI API Key: {'✅ Configured' if os.getenv('OPENAI_API_KEY') else '❌ Missing'}")
+    
+    try:
+        mcp.run()
+    except KeyboardInterrupt:
+        print("🛑 Server stopped by user")
+    except Exception as e:
+        print(f"❌ Server error: {e}")
+        raise
