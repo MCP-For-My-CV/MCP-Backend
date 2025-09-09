@@ -8,21 +8,6 @@
         "EMAIL_USER": "${env:EMAIL_USER}",
         "EMAIL_PASSWORD": "${env:EMAIL_PASSWORD}"
       }
-    },
-    "cv-rag-server-http": {
-      "command": "python",
-      "args": ["rest_api.py"],
-      "env": {
-        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
-        "EMAIL_USER": "${env:EMAIL_USER}",
-        "EMAIL_PASSWORD": "${env:EMAIL_PASSWORD}",
-        "PORT": "8000"
-      },
-      "transport": {
-        "type": "http",
-        "host": "localhost",
-        "port": 8000
-      }
     }
   }
 }

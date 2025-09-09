@@ -16,5 +16,5 @@ COPY . .
 # Expose port
 EXPOSE 10000
 
-# Run the REST API server
-CMD ["python", "rest_api.py"]
+# Run the unified MCP+HTTP server
+CMD ["python", "mcp_server.py"]
