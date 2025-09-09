@@ -3,6 +3,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PORT=10000
+ENV RENDER=true
 
 WORKDIR /app
 

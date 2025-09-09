@@ -236,16 +236,31 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"❌ HTTP Server error: {e}")
     
-    http_thread = threading.Thread(target=start_http_server, daemon=True)
-    http_thread.start()
-    print(f"✅ HTTP server started on port {http_port}")
+    # Check if we're running in Render production environment
+    is_render = os.getenv('RENDER') is not None
     
-    try:
-        # Run the MCP server
-        print(f"✅ Starting MCP server")
-        mcp.run()
-    except KeyboardInterrupt:
-        print("\n🛑 Servers stopped by user")
-    except Exception as e:
-        print(f"❌ MCP Server error: {e}")
-        sys.exit(1)
+    if is_render:
+        # In Render, run HTTP server in the main thread
+        print(f"🔄 Running in Render production mode - HTTP server only")
+        try:
+            uvicorn.run(app, host="0.0.0.0", port=http_port)
+        except KeyboardInterrupt:
+            print("\n🛑 Server stopped by user")
+        except Exception as e:
+            print(f"❌ HTTP Server error: {e}")
+            sys.exit(1)
+    else:
+        # In development, run both servers
+        http_thread = threading.Thread(target=start_http_server, daemon=True)
+        http_thread.start()
+        print(f"✅ HTTP server started on port {http_port}")
+        
+        try:
+            # Run the MCP server
+            print(f"✅ Starting MCP server")
+            mcp.run()
+        except KeyboardInterrupt:
+            print("\n🛑 Servers stopped by user")
+        except Exception as e:
+            print(f"❌ MCP Server error: {e}")
+            sys.exit(1)
