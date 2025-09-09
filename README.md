@@ -18,7 +18,12 @@ A Python-based Retrieval Augmented Generation (RAG) system optimized for CV/resu
 
 ![System Architecture](./Images/System.png)
 
-For text-based environments, here's the architecture diagram:
+The system architecture consists of:
+
+- **Frontend Interface**: Web or IDE-based client for user interactions
+- **Unified Backend Server**: Combined MCP and HTTP servers
+- **Vector Database**: ChromaDB for efficient document storage and retrieval
+- **OpenAI API**: For embeddings and language model inference
 
 ### RAG Pipeline Overview
 
@@ -29,8 +34,6 @@ The Retrieval Augmented Generation (RAG) pipeline enhances the AI's responses by
 1. **Retrieval**: Finding relevant information from the CV database
 2. **Augmentation**: Combining retrieved context with the user's question
 3. **Generation**: Creating accurate, contextually relevant answers
-
-This approach ensures responses are grounded in the actual CV content, reducing hallucinations and improving accuracy.
 
 ### Component Details
 
@@ -105,8 +108,7 @@ MCP-Backend/
 ├── ingest.py      # Document ingestion script
 ├── models.py      # OpenAI model configurations
 ├── chat.py        # Interactive chat interface
-├── mcp_server.py  # MCP server with email tool
-├── rest_api.py    # REST API server
+├── mcp_server.py  # Unified MCP and HTTP server with all tools
 ├── rag_core.py    # Optimized RAG implementation
 └── test_email.py  # Email testing utility
 ```
@@ -146,15 +148,16 @@ Follow these steps to run the project locally:
 
    - Create a `.env` file with your OpenAI API key and email settings
 
-5. **Run the REST API server**
+5. **Run the unified server**
 
    ```bash
-   python rest_api.py
+   python mcp_server.py
    ```
 
 6. **Access the API**
    - Open your browser to: http://localhost:8000/docs
    - Use the Swagger UI to test the endpoints
+   - Access the MCP server on port 10000 through compatible IDE extensions
 
 ### Deployed Version
 
@@ -178,17 +181,18 @@ This will:
 4. Store vectors in the ChromaDB vector database
 5. Mark processed files with a `_` prefix to avoid reprocessing
 
-### Running the REST API Server
+### Running the Unified Server
 
 ```bash
-python rest_api.py
+python mcp_server.py
 ```
 
 This will:
 
 1. Initialize the RAG system with optimized memory usage
 2. Start the FastAPI server on port 8000 (configurable via PORT env variable)
-3. Make both RAG and email endpoints available
+3. Start the MCP server on port 10000 for IDE integrations
+4. Make both RAG and email endpoints available via HTTP and MCP
 
 ### Interactive Chat Interface
 
@@ -243,14 +247,22 @@ python test_email.py
 
 ## Deployment
 
-### Memory-Optimized for Cloud Deployment
+### Deployment Modes
 
-This application has been specifically optimized for deployment on platforms with memory constraints such as Render's free tier:
+The application has two modes of operation:
 
-- Removed heavy local models (HuggingFace/sentence-transformers)
-- Streamlined to use only OpenAI API (cloud-based models)
-- Single initialization of components
-- Efficient database connections
+1. **Development Mode** (local) - Runs both HTTP and MCP servers
+
+   - HTTP server on port 8000 (or PORT from environment)
+   - MCP server on port 10000
+   - Both servers run in separate threads
+
+2. **Production Mode** (Render) - Runs only the HTTP server
+   - HTTP server on port specified by Render (usually PORT environment variable)
+   - MCP server is disabled to conserve resources
+   - Activated when RENDER environment variable is set
+
+The deployment mode is automatically detected based on environment variables.
 
 ### Docker Deployment
 
@@ -261,12 +273,14 @@ Build and run with Docker:
 docker build -t cv-rag-system .
 
 # Run with environment variables
-docker run -p 8000:8000 \
+docker run -p 8000:8000 -p 10000:10000 \
   -e OPENAI_API_KEY=your_key \
   -e EMAIL_USER=your.email@gmail.com \
   -e EMAIL_PASSWORD=your_app_password \
   cv-rag-system
 ```
+
+The Docker container will run the unified MCP+HTTP server in production mode by default, with the `RENDER` environment variable set to `true`.
 
 ### Deploying to Render
 
@@ -280,6 +294,7 @@ docker run -p 8000:8000 \
      - `EMAIL_USER`: Your Gmail address
      - `EMAIL_PASSWORD`: Your Gmail App Password
      - `CORS_ORIGINS`: Allowed origins (e.g., your frontend URL)
+     - `RENDER`: Set to "true" to enable production mode
 
 #### Live Deployment
 
@@ -292,6 +307,58 @@ You can:
 - Test the RAG endpoint at `https://cv-rag-system.onrender.com/tools/rag`
 - View API documentation at `https://cv-rag-system.onrender.com/docs`
 - Check system health at `https://cv-rag-system.onrender.com/health`
+
+## MCP Integration
+
+This project includes Model Context Protocol (MCP) integration for IDE tools:
+
+### What is MCP?
+
+Model Context Protocol (MCP) is a standardized communication protocol that allows language models to interact with tools and services in a structured way. In this project, MCP enables IDE extensions to communicate with the RAG system and email functionality directly from within your code editor.
+
+### MCP Integration Architecture
+
+![MCP Integration](./Images/MCP_Integration.png)
+
+The MCP integration allows IDE extensions to communicate with the server, enabling:
+
+- Direct CV queries from your code editor
+- Email sending capabilities
+- Contextual assistance based on your CV content
+
+### MCP Configuration
+
+A `.mcp.json` file is provided that defines the available tools and environment configuration for IDE integration:
+
+```json
+{
+  "version": "1.13.1",
+  "commands": {
+    "cv-rag-server": {
+      "env": {
+        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+      },
+      "command": ["python", "mcp_server.py"]
+    }
+  }
+}
+```
+
+### Compatible IDE Extensions
+
+This project works with the following IDE extensions:
+
+- VS Code: [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat)
+- JetBrains IDEs: [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot)
+
+### Using MCP in Your IDE
+
+When the MCP server is running, compatible IDE extensions can:
+
+1. Connect to the server on port 10000
+2. Use the RAG tool to query your CV content
+3. Use the email tool to send emails
+4. Access all functionality without leaving your IDE
 
 ## API Reference
 
@@ -418,6 +485,8 @@ The system has been optimized for minimal memory usage:
 - Removed sentence-transformers dependency (~500MB-1GB)
 - Single initialization pattern for models
 - Streamlined retrieval chain
+- Unified servers for better resource utilization
+- Conditional execution based on deployment environment
 
 ### Performance Considerations
 
@@ -450,6 +519,16 @@ For Render deployment problems:
 - Ensure all environment variables are correctly set in Render dashboard
 - Check if your repository is properly connected
 - Verify Docker build is successful
+- Confirm RENDER environment variable is set to enable production mode
+
+### MCP Connection Issues
+
+If you can't connect to the MCP server from your IDE:
+
+- Verify the MCP server is running (only in development mode)
+- Check that port 10000 is not blocked by firewall
+- Ensure your IDE extension is properly configured
+- Try restarting the server and IDE
 
 ## Contributing
 
